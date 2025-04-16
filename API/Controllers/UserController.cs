@@ -1,5 +1,6 @@
 ﻿using Application.Interfaces;
 using Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Presentation.Responses;
 
@@ -10,12 +11,16 @@ namespace Presentation.Controllers;
 public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
+    private readonly IAuthService _authService;
 
-    public UserController(IUserService userService)
+    public UserController(IUserService userService, IAuthService authService)
     {
         _userService = userService;
+        _authService = authService;
     }
 
+
+    [Authorize]
     [HttpGet]
     public async Task<IActionResult> GetUsers(int pageNumber = 1, int pageSize = 5)
     {
@@ -23,6 +28,7 @@ public class UserController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetUser(Guid id)
     {
@@ -33,13 +39,17 @@ public class UserController : ControllerBase
         return Ok(ApiResponse<User>.SuccessResponse(user));
     }
 
+
     [HttpPost]
     public async Task<IActionResult> RegisterUser([FromBody] User user)
     {
         var createdUser = await _userService.RegisterUserAsync(user);
-        return CreatedAtAction(nameof(GetUser), new { id = createdUser.Id }, ApiResponse<User>.SuccessResponse(createdUser, "User created"));
+        var jwtToken = _authService.GenerateJwtToken(createdUser);
+
+        return CreatedAtAction(nameof(GetUser), new { id = createdUser.Id }, ApiResponse<object>.SuccessResponse(new { user = createdUser, token = jwtToken }, "User created"));
     }
 
+    [Authorize]
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateUser(Guid id, [FromBody] User user)
     {
@@ -50,6 +60,7 @@ public class UserController : ControllerBase
         return Ok(ApiResponse<string>.SuccessResponse("User updated successfully"));
     }
 
+    [Authorize]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteUser(Guid id)
     {
