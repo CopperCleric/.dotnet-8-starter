@@ -17,10 +17,10 @@ public class UserController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetUsers()
+    public async Task<IActionResult> GetUsers(int pageNumber = 1, int pageSize = 5)
     {
-        var users = await _userService.GetAllUsersAsync();
-        return Ok(ApiResponse<List<User>>.SuccessResponse(users));
+        var result = await _userService.GetUsersPaginatedAsync(pageNumber, pageSize);
+        return Ok(result);
     }
 
     [HttpGet("{id}")]

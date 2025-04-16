@@ -14,8 +14,18 @@ public class UserRepository : IUserRepository
         _context = context;
     }
 
-    public async Task<List<User>> GetAllUsersAsync() =>
-        await _context.Users.ToListAsync();
+    public async Task<IEnumerable<User>> GetUsersPaginatedAsync(int pageNumber, int pageSize)
+    {
+        return await _context.Users
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+    }
+
+    public async Task<int> GetTotalUsersCountAsync()
+    {
+        return await _context.Users.CountAsync();
+    }
 
     public async Task<User?> GetUserByIdAsync(Guid id) =>
         await _context.Users.FindAsync(id);
