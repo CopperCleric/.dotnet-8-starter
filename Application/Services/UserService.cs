@@ -12,8 +12,22 @@ public class UserService : IUserService
         _userRepository = userRepository;
     }
 
-    public async Task<List<User>> GetAllUsersAsync() =>
-        await _userRepository.GetAllUsersAsync();
+    public async Task<PagedResponse<User>> GetUsersPaginatedAsync(int pageNumber, int pageSize)
+    {
+        var users = await _userRepository.GetUsersPaginatedAsync(pageNumber, pageSize);
+        var totalUsers = await _userRepository.GetTotalUsersCountAsync();
+
+        var totalPages = (int)Math.Ceiling(totalUsers / (double)pageSize);
+
+        return new PagedResponse<User>
+        {
+            Data = users,
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            TotalRecords = totalUsers,
+            TotalPages = totalPages
+        };
+    }
 
     public async Task<User?> GetUserByIdAsync(Guid id) =>
         await _userRepository.GetUserByIdAsync(id);
